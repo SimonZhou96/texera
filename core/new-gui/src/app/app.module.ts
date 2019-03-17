@@ -58,6 +58,7 @@ import {
 } from './dashboard/component/feature-container/user-dictionary-section/ngbd-modal-resource-delete/ngbd-modal-resource-delete.component';
 
 import { ResourceSectionComponent } from './dashboard/component/feature-container/resource-section/resource-section.component';
+import { FileUploadModule } from 'ng2-file-upload';
 
 
 @NgModule({
@@ -109,7 +110,8 @@ import { ResourceSectionComponent } from './dashboard/component/feature-containe
     RouterModule.forRoot([]),
     TourNgBootstrapModule.forRoot(),
 
-    MaterialDesignFrameworkModule
+    MaterialDesignFrameworkModule,
+    FileUploadModule,
 
   ],
   entryComponents: [
