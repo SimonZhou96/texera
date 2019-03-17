@@ -78,7 +78,6 @@ export class NgbdModalResourceAddComponent {
   public removeFile(item:any){
     //For "delete" button. Remove the specific file
     //typeof item -> FileItem
-    console.log("Removed file:",item._file.name,", the type is",item._file.type);
     //when the user remove one file which is not text type, drop the number of counter with one
     if (!item._file.type.includes("text")){
       this.invalidFileNumbe--;
@@ -115,10 +114,6 @@ export class NgbdModalResourceAddComponent {
     for(var i=0;i<filelist.length;i++){
       if (!filelist[i].type.includes("text")){
         this.invalidFileNumbe++;
-        console.log("Invalid file captured:",filelist[i].name,", the type is",filelist[i].type);
-      }
-      else{
-        console.log("Captured file:",filelist[i].name);
       }
     }
     this.checkDuplicateFiles();
