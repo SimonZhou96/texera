@@ -49,12 +49,11 @@ export class WorkflowEditorComponent implements AfterViewInit {
   public readonly WORKFLOW_EDITOR_JOINTJS_ID = 'texera-workflow-editor-jointjs-body-id';
 
   private paper: joint.dia.Paper | undefined;
+  private preViewMap: joint.dia.Paper | undefined;
   /**
    * Logically, set ZoomOffset to be 1 since the intial zoom time is 1.
    */
   private newZoomRatio: number = 1;
-
-
 
   private ifMouseDown: boolean = false;
   private mouseDown: Point | undefined;
@@ -106,6 +105,13 @@ export class WorkflowEditorComponent implements AfterViewInit {
     this.setJointPaperDimensions();
   }
 
+  private intializePreviewPaper(): void {
+    let jointPaperOptions = WorkflowEditorComponent.getJointPaperOptions();
+
+    // attach the JointJS graph (model) to the paper (view)
+    jointPaperOptions = this.workflowActionService.attachJointPaper(jointPaperOptions);
+    // attach the DOM element to the paper
+  }
     /**
      * Handles zoom events passed from navigation-component, which can be used to
      *  make the jointJS paper larger or smaller.

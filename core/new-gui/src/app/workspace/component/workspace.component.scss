@@ -122,3 +122,15 @@
   grid-row-start: 3;
   grid-row-end: 4;
 }
+
+/**
+  * this style specifies that the preview map
+  * will occupy the 3rd (right) columm and use the last row (right). It will
+  * be right under the workflow-editor
+  */
+.texera-preview-map-grid-container {
+  grid-column-start: 3;
+  grid-column-end: 4;
+  grid-row-start: 3;
+  grid-row-end: 4;
+}
