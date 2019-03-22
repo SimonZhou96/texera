@@ -3,6 +3,15 @@
     <a class="navbar-brand" href="#">
         Texera <span class="version-number">0.3.0</span>
       </a>
+    <span (click)="onClickUtility()">
+        <i class="navbar-brand zoom-button fa fa-play-circle"></i>
+    </span>
+    <span (click)="onClickZoomOut()">
+      <i class="navbar-brand zoom-button fa fa-search-minus"></i>
+    </span>
+    <span (click)="onClickZoomIn()">
+      <i class = "navbar-brand zoom-button fa fa-search-plus"></i>
+    </span>
     <div class="button" tourAnchor= "texera-workspace-navigation-run">
       <button class="btn btn-secondary texera-workspace-tour-run" (click)="tourService.toggle()" tourAnchor="start.tour">
           <span>

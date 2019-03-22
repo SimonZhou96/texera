@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { ExecuteWorkflowService } from './../../service/execute-workflow/execute-workflow.service';
 import { TourService } from 'ngx-tour-ng-bootstrap';
 import { environment } from '../../../../environments/environment';
+import { DragDropService } from './../../service/drag-drop/drag-drop.service';
+
 
 /**
  * NavigationComponent is the top level navigation bar that shows
@@ -25,9 +27,17 @@ import { environment } from '../../../../environments/environment';
 })
 export class NavigationComponent implements OnInit {
 
+  // zoomDifference represents the ratio that is zoom in/out everytime.
+  public static readonly ZOOM_DIFFERENCE: number = 0.02;
+
+
   public isWorkflowRunning: boolean = false; // set this to true when the workflow is started
   public isWorkflowPaused: boolean = false; // this will be modified by clicking pause/resume while the workflow is running
-  constructor(private executeWorkflowService: ExecuteWorkflowService, public tourService: TourService) {
+
+   // the newZoomRatio represents the ratio of the size of the the new window to the original one.
+   private newZoomRatio: number = 1;
+  constructor(private dragDropService: DragDropService,
+    private executeWorkflowService: ExecuteWorkflowService, public tourService: TourService) {
     // return the run button after the execution is finished, either
     //  when the value is valid or invalid
     executeWorkflowService.getExecuteEndedStream().subscribe(
@@ -111,5 +121,22 @@ export class NavigationComponent implements OnInit {
       }
     }
   }
-
+  public onClickUtility(): void {
+    // initial version, default index is 0;
+    this.dragDropService.setUtilityIndex(0);
+  }
+  /**
+   * send the offset value to the work flow editor panel using drag and drop service.
+   * when users click on the button, we change the zoomoffset to make window larger or smaller.
+  */
+  public onClickZoomIn(): void {
+    // make the ratio small.
+    this.newZoomRatio += NavigationComponent.ZOOM_DIFFERENCE;
+    this.dragDropService.setZoomProperty(this.newZoomRatio);
+  }
+  public onClickZoomOut(): void {
+    // make the ratio big.
+    this.newZoomRatio -= NavigationComponent.ZOOM_DIFFERENCE;
+    this.dragDropService.setZoomProperty(this.newZoomRatio);
+  }
 }
