@@ -1,12 +1,16 @@
-import { Point } from './../../types/workflow-common.interface';
+import { Point, OperatorPredicate, OperatorLink, OperatorPort } from './../../types/workflow-common.interface';
+import { keyWordSearchPredicate, wordCountPredicate,
+  keyWordSearchWordCountLink, viewResultPredicate,
+    wordCountViewResultLink } from './../../service/workflow-graph/model/mock-workflow-data';
 import { WorkflowActionService } from './../workflow-graph/model/workflow-action.service';
 import { Observable } from 'rxjs/Observable';
 import { WorkflowUtilService } from './../workflow-graph/util/workflow-util.service';
 import { JointUIService } from './../joint-ui/joint-ui.service';
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs/Subject';
-
+import { ZoomInOutService } from './../zoom-in-out/zoom-in-out.service';
 import * as joint from 'jointjs';
+import { constants } from 'os';
 
 /**
  * The OperatorDragDropService class implements the behavior of dragging an operator label from the side bar
@@ -45,13 +49,22 @@ import * as joint from 'jointjs';
 export class DragDropService {
 
   private static readonly DRAG_DROP_TEMP_OPERATOR_TYPE = 'drag-drop-temp-operator-type';
-
+  // a subject that can make user add operator faster.
+  private workflowEditorUtilitySubject: Subject<number> = new Subject<number>();
+  // a subject that can restore the value passed from navigation.component.ts
+  private workflowEditorZoomSubject: Subject<number> = new Subject<number>();
+  // initially the index of the utility that user choose is 0;
+  private utilityIndex: number = 0;
+  // initially the zoom ratio is 1
+  private newZoomRatio: number = 1;
+  // dragOffset has two elements, first is the drag offset alongside x axis, second is the drag offset alongside y axis.
+  private dragOffset: Point = {x : 0,  y : 0};
   /** mapping of DOM Element ID to operatorType */
   private elementOperatorTypeMap = new Map<string, string>();
   /** the current operatorType of the operator being dragged */
   private currentOperatorType = DragDropService.DRAG_DROP_TEMP_OPERATOR_TYPE;
 
-
+  private utilityTemplateOffset = 150;
   /** Subject for operator dragging is started */
   private operatorDragStartedSubject = new Subject<{ operatorType: string }>();
 
@@ -64,7 +77,8 @@ export class DragDropService {
   constructor(
     private jointUIService: JointUIService,
     private workflowUtilService: WorkflowUtilService,
-    private workflowActionService: WorkflowActionService
+    private workflowActionService: WorkflowActionService,
+    private zoomInOutService: ZoomInOutService
   ) {
     this.handleOperatorDropEvent();
   }
@@ -78,8 +92,18 @@ export class DragDropService {
       value => {
         // construct the operator from the drop stream value
         const operator = this.workflowUtilService.getNewOperatorPredicate(value.operatorType);
+        /**
+         * get the new drop coordinate of operator, when users drag or zoom the panel, to make sure the operator will
+         drop on the right location.
+         */
+
+        const newOperatorOffset: Point = {
+          x:  (value.offset.x - this.dragOffset.x) / this.zoomInOutService.getZoomRatio(),
+          y: (value.offset.y - this.dragOffset.y) / this.zoomInOutService.getZoomRatio()
+        };
+
         // add the operator
-        this.workflowActionService.addOperator(operator, value.offset);
+        this.workflowActionService.addOperator(operator, newOperatorOffset);
         // highlight the operator after adding the operator
         this.workflowActionService.getJointGraphWrapper().highlightOperator(operator.operatorID);
         // reset the current operator type to an non-exist type
@@ -96,7 +120,19 @@ export class DragDropService {
   public getOperatorStartDragStream(): Observable<{ operatorType: string }> {
     return this.operatorDragStartedSubject.asObservable();
   }
+  /**
+   * Gets an observable for operator making utility.
+   */
+  public getWorkFlowEditorUtilityStream(): Observable<number> {
+    return this.workflowEditorUtilitySubject.asObservable();
+  }
 
+  /**
+   * get subject from drag-and-drop service in order to get the zoom ratio value.
+   */
+  public getWorkflowEditorZoomStream(): Observable<number> {
+    return this.workflowEditorZoomSubject.asObservable();
+  }
 
   /**
    * Gets an observable for operator is dropped on the main workflow editor event
@@ -106,6 +142,33 @@ export class DragDropService {
    */
   public getOperatorDropStream(): Observable<{ operatorType: string, offset: Point }> {
     return this.operatorDroppedSubject.asObservable();
+  }
+
+  /**
+   * This method will update the drag offset so that dropping
+   *  a new operator will appear at the correct location on the UI.
+   *
+   * @param offset new offset from panning
+   */
+  public setOffset(offset: Point) {
+    this.dragOffset = {x: offset.x, y: offset.y};
+  }
+
+  public setUtilityIndex(index: number) {
+      this.utilityIndex = index;
+      this.workflowEditorUtilitySubject.next(this.utilityIndex);
+  }
+
+  /**
+   * This method will update the zoom ratio, which will be used
+   *  in calculating the position of the operator dropped on the UI.
+   *
+   * @param ratio new ratio from zooming
+   */
+  public setZoomProperty(ratio: number) {
+      this.newZoomRatio = ratio;
+      console.log('zoom property: ', this.newZoomRatio);
+      this.workflowEditorZoomSubject.next(this.newZoomRatio);
   }
 
   /**
@@ -145,6 +208,32 @@ export class DragDropService {
       drop: (event: any, ui) => this.handleOperatorDrop(event, ui)
     });
   }
+  /**
+   * creates an series of operators that can form as a workflow directly.
+   *
+   */
+
+  public createNewOperator(utilityIndex: number) {
+    const firstOperatorOffset: Point = {
+      x:  this.utilityTemplateOffset,
+      y:  200
+    };
+    const secondOperatorOffset: Point = {
+      x:  this.utilityTemplateOffset * 2,
+      y:  200
+    };
+    const thirdOperatorOffset: Point = {
+      x:  this.utilityTemplateOffset * 3,
+      y:  200
+    };
+    if (utilityIndex === 0) {
+        this.workflowActionService.addOperator(keyWordSearchPredicate, firstOperatorOffset);
+        this.workflowActionService.addOperator(wordCountPredicate, secondOperatorOffset);
+        this.workflowActionService.addOperator(viewResultPredicate, thirdOperatorOffset);
+        this.workflowActionService.addLink(keyWordSearchWordCountLink);
+        this.workflowActionService.addLink(wordCountViewResultLink);
+    }
+  }
 
   /**
    * Creates a DOM Element that visually looks identical to the operator when dropped on main workflow editor
@@ -156,6 +245,7 @@ export class DragDropService {
    *
    * @param operatorType - the type of the operator
    */
+
   private createFlyingOperatorElement(operatorType: string): JQuery<HTMLElement> {
     // set the current operator type from an nonexist placeholder operator type
     //  to the operator type being dragged

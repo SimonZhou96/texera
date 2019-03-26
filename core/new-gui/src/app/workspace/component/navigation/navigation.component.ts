@@ -3,7 +3,7 @@ import { ExecuteWorkflowService } from './../../service/execute-workflow/execute
 import { TourService } from 'ngx-tour-ng-bootstrap';
 import { environment } from '../../../../environments/environment';
 import { DragDropService } from './../../service/drag-drop/drag-drop.service';
-
+import { ZoomInOutService } from './../../service/zoom-in-out/zoom-in-out.service';
 
 /**
  * NavigationComponent is the top level navigation bar that shows
@@ -37,7 +37,8 @@ export class NavigationComponent implements OnInit {
    // the newZoomRatio represents the ratio of the size of the the new window to the original one.
    private newZoomRatio: number = 1;
   constructor(private dragDropService: DragDropService,
-    private executeWorkflowService: ExecuteWorkflowService, public tourService: TourService) {
+    private executeWorkflowService: ExecuteWorkflowService, public tourService: TourService,
+    private zoomInOutService: ZoomInOutService) {
     // return the run button after the execution is finished, either
     //  when the value is valid or invalid
     executeWorkflowService.getExecuteEndedStream().subscribe(
@@ -61,6 +62,9 @@ export class NavigationComponent implements OnInit {
   ngOnInit() {
   }
 
+  public onClickDelete(): void {
+
+  }
   /**
    * Executes the current existing workflow on the JointJS paper. It will
    *  also set the `isWorkflowRunning` variable to true to show that the backend
@@ -125,18 +129,34 @@ export class NavigationComponent implements OnInit {
     // initial version, default index is 0;
     this.dragDropService.setUtilityIndex(0);
   }
+
+  public setZoomProperty(ratio: number) {
+    this.newZoomRatio = ratio;
+  }
   /**
    * send the offset value to the work flow editor panel using drag and drop service.
    * when users click on the button, we change the zoomoffset to make window larger or smaller.
   */
   public onClickZoomIn(): void {
+    this.zoomInOutService.getButtonZoomStream().subscribe(
+      zoomRatio => {
+        this.newZoomRatio = zoomRatio;
+      }
+    );
     // make the ratio small.
     this.newZoomRatio += NavigationComponent.ZOOM_DIFFERENCE;
-    this.dragDropService.setZoomProperty(this.newZoomRatio);
+    this.zoomInOutService.setZoomRatio(this.zoomInOutService.getZoomRatio() + NavigationComponent.ZOOM_DIFFERENCE);
+    this.zoomInOutService.setmouseWheelZoomProperty(this.zoomInOutService.getZoomRatio());
   }
   public onClickZoomOut(): void {
+    this.zoomInOutService.getButtonZoomStream().subscribe(
+      zoomRatio => {
+        this.newZoomRatio = zoomRatio;
+      }
+    );
     // make the ratio big.
     this.newZoomRatio -= NavigationComponent.ZOOM_DIFFERENCE;
-    this.dragDropService.setZoomProperty(this.newZoomRatio);
+    this.zoomInOutService.setZoomRatio(this.zoomInOutService.getZoomRatio() - NavigationComponent.ZOOM_DIFFERENCE);
+    this.zoomInOutService.setmouseWheelZoomProperty(this.zoomInOutService.getZoomRatio());
   }
 }

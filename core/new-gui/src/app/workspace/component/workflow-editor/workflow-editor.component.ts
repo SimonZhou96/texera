@@ -2,14 +2,17 @@ import { DragDropService } from './../../service/drag-drop/drag-drop.service';
 import { JointUIService } from './../../service/joint-ui/joint-ui.service';
 import { WorkflowActionService } from './../../service/workflow-graph/model/workflow-action.service';
 import { WorkflowUtilService } from './../../service/workflow-graph/util/workflow-util.service';
+import { PreviewMapService } from './../../service/preview-map/preview-map.service';
+import { ZoomInOutService } from './../../service/zoom-in-out/zoom-in-out.service';
+
 import { Component, AfterViewInit } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 
 import '../../../common/rxjs-operators';
 import * as joint from 'jointjs';
 import { Point } from '../../types/workflow-common.interface';
-import { NavigationComponent } from '../navigation/navigation.component';
-
+import { NavigationComponent } from './../navigation/navigation.component';
+// import { PreviewMapComponent } from './../preview-map/preview-map.component';
 // argument type of callback event on a JointJS Paper
 // which is a 4-element tuple:
 // 1. the JointJS View (CellView) of the event
@@ -48,12 +51,16 @@ export class WorkflowEditorComponent implements AfterViewInit {
   public readonly WORKFLOW_EDITOR_JOINTJS_WRAPPER_ID = 'texera-workflow-editor-jointjs-wrapper-id';
   public readonly WORKFLOW_EDITOR_JOINTJS_ID = 'texera-workflow-editor-jointjs-body-id';
 
+
   private paper: joint.dia.Paper | undefined;
-  private preViewMap: joint.dia.Paper | undefined;
+  private previewPaper: joint.dia.Paper | undefined;
+  // private preViewPaper: joint.dia.Paper | undefined;
   /**
    * Logically, set ZoomOffset to be 1 since the intial zoom time is 1.
    */
   private newZoomRatio: number = 1;
+
+
 
   private ifMouseDown: boolean = false;
   private mouseDown: Point | undefined;
@@ -64,7 +71,10 @@ export class WorkflowEditorComponent implements AfterViewInit {
     private workflowActionService: WorkflowActionService,
     private dragDropService: DragDropService,
     private workflowUtilService: WorkflowUtilService,
-    private jointUIService: JointUIService
+    private jointUIService: JointUIService,
+    private zoomInOutService: ZoomInOutService,
+    private previewMapService: PreviewMapService
+    // private previewMapComponent: PreviewMapComponent
   ) {
   }
 
@@ -88,6 +98,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
     this.handleWindowDrag();
     this.handlePaperMouseZoom();
     this.handlePaperUtility();
+    this.previewMapService.intializePreviewPaper(this.previewPaper);
     this.dragDropService.registerWorkflowEditorDrop(this.WORKFLOW_EDITOR_JOINTJS_ID);
   }
 
@@ -100,25 +111,19 @@ export class WorkflowEditorComponent implements AfterViewInit {
     jointPaperOptions.el = $(`#${this.WORKFLOW_EDITOR_JOINTJS_ID}`);
     // create the JointJS paper
     this.paper = new joint.dia.Paper(jointPaperOptions);
-
+    this.paper.drawGrid([]);
     this.setJointPaperOriginOffset();
     this.setJointPaperDimensions();
   }
 
-  private intializePreviewPaper(): void {
-    let jointPaperOptions = WorkflowEditorComponent.getJointPaperOptions();
 
-    // attach the JointJS graph (model) to the paper (view)
-    jointPaperOptions = this.workflowActionService.attachJointPaper(jointPaperOptions);
-    // attach the DOM element to the paper
-  }
     /**
      * Handles zoom events passed from navigation-component, which can be used to
      *  make the jointJS paper larger or smaller.
      */
     private handlePaperZoom(): void {
-      this.dragDropService.getWorkflowEditorZoomStream().subscribe((newRatio) => {
-        this.newZoomRatio = newRatio;
+      this.zoomInOutService.getMouseWheelZoomStream().subscribe((newRatio) => {
+        this.newZoomRatio = this.zoomInOutService.getZoomRatio();
         this.getJointPaper().scale(this.newZoomRatio, this.newZoomRatio);
       });
     }
@@ -144,15 +149,16 @@ export class WorkflowEditorComponent implements AfterViewInit {
              * delta Y is bigger than 0, the wheel was sliding up, we should zoom out the window.
             */
             if (value.deltaY < 0) {
-              this.newZoomRatio -= NavigationComponent.ZOOM_DIFFERENCE;
+              this.newZoomRatio = this.zoomInOutService.getZoomRatio() - NavigationComponent.ZOOM_DIFFERENCE;
+              this.zoomInOutService.setZoomRatio(this.getZoomRatio() - NavigationComponent.ZOOM_DIFFERENCE);
               this.getJointPaper().scale(this.newZoomRatio, this.newZoomRatio);
-              this.dragDropService.setZoomProperty(this.newZoomRatio);
             }
             if (value.deltaX > 0) {
-              this.newZoomRatio += NavigationComponent.ZOOM_DIFFERENCE;
+              this.newZoomRatio = this.zoomInOutService.getZoomRatio() + NavigationComponent.ZOOM_DIFFERENCE;
+              this.zoomInOutService.setZoomRatio(this.getZoomRatio() + NavigationComponent.ZOOM_DIFFERENCE);
               this.getJointPaper().scale(this.newZoomRatio, this.newZoomRatio);
-              this.dragDropService.setZoomProperty(this.newZoomRatio);
             }
+
           }
 
         );
@@ -297,6 +303,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
     this.getJointPaper().setDimensions(elementSize.width, elementSize.height);
   }
 
+
   /**
    * Handles the event where the Delete button is clicked for an Operator,
    *  and call workflowAction to delete the corresponding operator.
@@ -333,6 +340,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
     return { width, height };
   }
 
+
   /**
    * Gets the document offset coordinates of the wrapper element's top-left corner.
    */
@@ -344,6 +352,8 @@ export class WorkflowEditorComponent implements AfterViewInit {
     }
     return { x: offset.left, y: offset.top };
   }
+
+
 
   /**
    * Gets our customize options for the JointJS Paper object, which is the JointJS view object responsible for
@@ -372,11 +382,15 @@ export class WorkflowEditorComponent implements AfterViewInit {
       preventDefaultBlankAction: false,
       // disable jointjs default action that prevents normal right click menu showing up on jointjs paper
       preventContextMenu: false,
+      // draw grid to the paper
+      drawGrid: true
     };
 
     return jointPaperOptions;
   }
 }
+
+
 /**
 * This function is provided to JointJS to disable some invalid connections on the UI.
 * If the connection is invalid, users are not able to connect the links on the UI.

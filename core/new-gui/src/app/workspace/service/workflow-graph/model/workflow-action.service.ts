@@ -72,6 +72,7 @@ export class WorkflowActionService {
    */
   public attachJointPaper(paperOptions: joint.dia.Paper.Options): joint.dia.Paper.Options {
     paperOptions.model = this.jointGraph;
+    console.log('action model: ', this.jointGraph);
     return paperOptions;
   }
 

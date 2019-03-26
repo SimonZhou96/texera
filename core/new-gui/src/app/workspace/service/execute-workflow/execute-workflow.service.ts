@@ -7,7 +7,7 @@ import './../../../common/rxjs-operators';
 import { AppSettings } from './../../../common/app-setting';
 
 import { WorkflowActionService } from './../workflow-graph/model/workflow-action.service';
-import { WorkflowGraphReadonly } from './../workflow-graph/model/workflow-graph';
+import { WorkflowGraphReadonly, WorkflowGraph } from './../workflow-graph/model/workflow-graph';
 import {
   LogicalLink, LogicalPlan, LogicalOperator,
   ExecutionResult, ErrorExecutionResult, SuccessExecutionResult
@@ -197,6 +197,7 @@ export class ExecuteWorkflowService {
    * @param response
    */
   private handleExecuteResult(response: SuccessExecutionResult): void {
+    console.log('response: ', response);
     this.executeEndedStream.next(response);
   }
 
@@ -230,20 +231,18 @@ export class ExecuteWorkflowService {
    * @param workflowGraph
    */
   public static getLogicalPlanRequest(workflowGraph: WorkflowGraphReadonly): LogicalPlan {
-
     const operators: LogicalOperator[] = workflowGraph
       .getAllOperators().map(op => ({
         ...op.operatorProperties,
         operatorID: op.operatorID,
         operatorType: op.operatorType
       }));
-
     const links: LogicalLink[] = workflowGraph
       .getAllLinks().map(link => ({
         origin: link.source.operatorID,
         destination: link.target.operatorID
       }));
-
+    console.log('operators: ', operators);
     return { operators, links };
   }
 

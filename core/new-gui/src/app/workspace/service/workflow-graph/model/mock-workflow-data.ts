@@ -19,9 +19,14 @@ import { Point, OperatorPredicate, OperatorLink } from './../../../types/workflo
  *
  */
 
+
+
+
 export const mockPoint: Point = {
   x: 100, y: 100
 };
+
+
 
 export const mockScanPredicate: OperatorPredicate = {
   operatorID: '1',
@@ -43,6 +48,33 @@ export const mockSentimentPredicate: OperatorPredicate = {
 
 export const mockResultPredicate: OperatorPredicate = {
   operatorID: '3',
+  operatorType: 'ViewResults',
+  operatorProperties: {
+  },
+  inputPorts: ['input-0'],
+  outputPorts: []
+};
+
+export const keyWordSearchPredicate: OperatorPredicate = {
+  operatorID: '4',
+  operatorType: 'KeywordMatcher',
+  operatorProperties: {
+  },
+  inputPorts: [],
+  outputPorts: ['output-0']
+};
+
+export const wordCountPredicate: OperatorPredicate = {
+  operatorID: '5',
+  operatorType: 'WordCount',
+  operatorProperties: {
+  },
+  inputPorts: ['input-0'],
+  outputPorts: ['output-0']
+};
+
+export const viewResultPredicate: OperatorPredicate = {
+  operatorID: '6',
   operatorType: 'ViewResults',
   operatorProperties: {
   },
@@ -108,5 +140,29 @@ export const mockFalseSentimentScanLink: OperatorLink = {
   target: {
     operatorID: mockScanPredicate.operatorID,
     portID: undefined as any
+  }
+};
+
+export const keyWordSearchWordCountLink: OperatorLink = {
+  linkID: 'link-6',
+  source: {
+    operatorID: keyWordSearchPredicate.operatorID,
+    portID: keyWordSearchPredicate.outputPorts[0]
+  },
+  target: {
+    operatorID: wordCountPredicate.operatorID,
+    portID: wordCountPredicate.inputPorts[0]
+  }
+};
+
+export const wordCountViewResultLink: OperatorLink = {
+  linkID: 'link-7',
+  source: {
+    operatorID: wordCountPredicate.operatorID,
+    portID: wordCountPredicate.outputPorts[0]
+  },
+  target: {
+    operatorID: viewResultPredicate.operatorID,
+    portID: viewResultPredicate.inputPorts[0]
   }
 };

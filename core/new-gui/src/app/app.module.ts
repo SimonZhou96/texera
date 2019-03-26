@@ -24,6 +24,7 @@ import { ResultPanelComponent, NgbModalComponent } from './workspace/component/r
 import { OperatorLabelComponent } from './workspace/component/operator-panel/operator-label/operator-label.component';
 import { ProductTourComponent } from './workspace/component/product-tour/product-tour.component';
 import { ResultPanelToggleComponent } from './workspace/component/result-panel-toggle/result-panel-toggle.component';
+import { PreviewMapComponent } from './../app/workspace/component/preview-map/preview-map.component';
 
 @NgModule({
   declarations: [
@@ -37,7 +38,8 @@ import { ResultPanelToggleComponent } from './workspace/component/result-panel-t
     NgbModalComponent,
     OperatorLabelComponent,
     ProductTourComponent,
-    ResultPanelToggleComponent
+    ResultPanelToggleComponent,
+    PreviewMapComponent
   ],
   imports: [
     BrowserModule,
@@ -54,7 +56,7 @@ import { ResultPanelToggleComponent } from './workspace/component/result-panel-t
     MaterialDesignFrameworkModule
 
   ],
-  providers: [ HttpClientModule ],
+  providers: [ HttpClientModule, PreviewMapComponent, WorkflowEditorComponent],
   bootstrap: [AppComponent],
   // dynamically created component must be placed in the entryComponents attribute
   entryComponents: [ NgbModalComponent ]
