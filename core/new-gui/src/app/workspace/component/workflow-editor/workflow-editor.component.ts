@@ -60,18 +60,13 @@ export class WorkflowEditorComponent implements AfterViewInit {
    */
   private newZoomRatio: number = 1;
 
-
-
   private ifMouseDown: boolean = false;
   private mouseDown: Point | undefined;
   private dragOffset: Point = { x : 0 , y : 0};
 
-
   constructor(
     private workflowActionService: WorkflowActionService,
     private dragDropService: DragDropService,
-    private workflowUtilService: WorkflowUtilService,
-    private jointUIService: JointUIService,
     private zoomInOutService: ZoomInOutService,
     private previewMapService: PreviewMapService
     // private previewMapComponent: PreviewMapComponent
@@ -124,6 +119,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
     private handlePaperZoom(): void {
       this.zoomInOutService.getMouseWheelZoomStream().subscribe((newRatio) => {
         this.newZoomRatio = this.zoomInOutService.getZoomRatio();
+        this.previewMapService.sendZoomValue(this.newZoomRatio);
         this.getJointPaper().scale(this.newZoomRatio, this.newZoomRatio);
       });
     }
@@ -151,11 +147,13 @@ export class WorkflowEditorComponent implements AfterViewInit {
             if (value.deltaY < 0) {
               this.newZoomRatio = this.zoomInOutService.getZoomRatio() - NavigationComponent.ZOOM_DIFFERENCE;
               this.zoomInOutService.setZoomRatio(this.getZoomRatio() - NavigationComponent.ZOOM_DIFFERENCE);
+              this.previewMapService.sendZoomValue(this.newZoomRatio);
               this.getJointPaper().scale(this.newZoomRatio, this.newZoomRatio);
             }
             if (value.deltaX > 0) {
               this.newZoomRatio = this.zoomInOutService.getZoomRatio() + NavigationComponent.ZOOM_DIFFERENCE;
               this.zoomInOutService.setZoomRatio(this.getZoomRatio() + NavigationComponent.ZOOM_DIFFERENCE);
+              this.previewMapService.sendZoomValue(this.newZoomRatio);
               this.getJointPaper().scale(this.newZoomRatio, this.newZoomRatio);
             }
 
@@ -207,6 +205,10 @@ export class WorkflowEditorComponent implements AfterViewInit {
             (- this.getWrapperElementOffset().x + this.dragOffset.x),
             (- this.getWrapperElementOffset().y + this.dragOffset.y)
           );
+
+          // pass offset to the preview map service.
+          this.previewMapService.sendTranslateOffset(- this.getWrapperElementOffset().x + this.dragOffset.x,
+          (- this.getWrapperElementOffset().y + this.dragOffset.y));
           // pass offset to the drag-and-drop.service, make drop operator be at the right location.
           this.dragDropService.setOffset(this.dragOffset);
         });
@@ -293,6 +295,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
   private setJointPaperOriginOffset(): void {
     const elementOffset = this.getWrapperElementOffset();
     this.getJointPaper().translate(-elementOffset.x + this.dragOffset.x, -elementOffset.y + this.dragOffset.y);
+    this.previewMapService.sendTranslateOffset(-elementOffset.x + this.dragOffset.x, -elementOffset.y + this.dragOffset.y);
   }
 
   /**

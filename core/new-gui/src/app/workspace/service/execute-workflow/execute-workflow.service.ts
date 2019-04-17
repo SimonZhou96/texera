@@ -87,6 +87,7 @@ export class ExecuteWorkflowService {
         // backend will either respond an execution result or an error will occur
         // handle both cases
         response => {
+          console.log('response: ', response);
           this.handleExecuteResult(response);
           this.workflowExecutionID = undefined;
         },
@@ -197,7 +198,6 @@ export class ExecuteWorkflowService {
    * @param response
    */
   private handleExecuteResult(response: SuccessExecutionResult): void {
-    console.log('response: ', response);
     this.executeEndedStream.next(response);
   }
 
@@ -242,7 +242,6 @@ export class ExecuteWorkflowService {
         origin: link.source.operatorID,
         destination: link.target.operatorID
       }));
-    console.log('operators: ', operators);
     return { operators, links };
   }
 

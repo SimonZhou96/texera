@@ -32,11 +32,14 @@
   */
   $header-height: 56px;
   $resultbar-height: 25px;
-  $previewmap-height: 0px;
+  $previewmap-height: 75px;
 .texera-workspace-grid-container {
   display: grid;
   grid-template-columns: 14% 70% 16%;
-  grid-template-rows: $header-height calc((100% - #{$header-height} - #{$resultbar-height}) * 0.75) $resultbar-height calc((100% - #{$header-height} - #{$resultbar-height}) * 0.25) 
+  grid-template-rows: 
+  $header-height calc((100% - #{$header-height} - #{$resultbar-height}) * 0.5)  
+  $resultbar-height calc((100% - #{$header-height} - #{$resultbar-height}) * 0.25) 
+  $previewmap-height calc((100% - #{$header-height} - #{$resultbar-height}) * 0.25)
 }
 
 /**
@@ -50,7 +53,10 @@
 .texera-original-workspace-grid-container{
   display: grid;
   grid-template-columns: 14% 70% 16%;
-  grid-template-rows: $header-height calc((100% - #{$header-height} - #{$resultbar-height})) $resultbar-height 0px
+  grid-template-rows: 
+  $header-height calc((100% - #{$header-height} - #{$resultbar-height} - #{$previewmap-height})) 
+  $resultbar-height 0px
+  $previewmap-height 75px
 }
 
 /**
@@ -75,7 +81,7 @@
   grid-column-start: 1;
   grid-column-end: 2;
   grid-row-start: 2;
-  grid-row-end: 5;
+  grid-row-end: 6;
   overflow: auto;
 }
 
@@ -133,5 +139,12 @@
   grid-column-start: 3;
   grid-column-end: 4;
   grid-row-start: 3;
+  grid-row-end: 6;
+}
+
+.texera-combination-grid-container {
+  grid-column-start: 3;
+  grid-column-end: 4;
+  grid-row-start: 2;
   grid-row-end: 5;
 }

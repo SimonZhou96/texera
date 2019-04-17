@@ -61,7 +61,13 @@ export class NavigationComponent implements OnInit {
 
   ngOnInit() {
   }
+  public mouseEnter() {
+    console.log('i am in!');
+  }
+  public mouseLeave() {
 
+  }
+  
   public onClickDelete(): void {
 
   }

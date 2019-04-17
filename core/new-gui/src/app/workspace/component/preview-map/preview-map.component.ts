@@ -6,6 +6,7 @@ import { Observable } from 'rxjs/Observable';
 
 import * as joint from 'jointjs';
 import '../../../common/rxjs-operators';
+import { Point } from '../../types/workflow-common.interface';
 
 @Component({
   selector: 'texera-preview-map',
@@ -16,14 +17,40 @@ export class PreviewMapComponent implements OnInit {
 
   private readonly WORKFLOW_EDITOR_PREVIEW_WRAPPER_ID = 'texera-workflow-editor-preview-wrapper-id';
   private readonly WORKFLOW_EDITOR_PREVIEW_ID = 'texera-workflow-editor-preview-body-id';
+  private translateOffsetX: number = 0;
+  private translateOffsetY: number = 0;
+  private zoomValue: number = 1;
   private previewMap: joint.dia.Paper | undefined;
   constructor(private previewMapService: PreviewMapService,
     private workflowActionService: WorkflowActionService) { }
 
   ngOnInit() {
+    this.initializeZoomOffset();
+    this.intializeTranslateOffset();
     this.initializePreviewMap();
   }
-
+  ngAfterInit() {
+    this.initializeZoomOffset();
+    this.intializeTranslateOffset();
+    this.initializePreviewMap();
+  }
+  public intializeTranslateOffset(): void {
+    this.previewMapService.getWorkFlowEditorTranslateStream().subscribe(offset => {
+      this.translateOffsetX = offset.x;
+      this.translateOffsetY = offset.y;
+      if (this.previewMap !== undefined){
+        this.previewMap.translate(this.translateOffsetX, this.translateOffsetY);
+      }
+    });
+  }
+  public initializeZoomOffset(): void {
+    this.previewMapService.getWorkFlowEditorZoomStream().subscribe(zoomValue => {
+      this.zoomValue = zoomValue;
+      if (this.previewMap !== undefined){
+        this.previewMap.scale(this.zoomValue * 0.15);
+      }
+    });
+  }
   public initializePreviewMap(): void {
     this.previewMapService.getWorkFlowEditorPreviewStream().subscribe ((map) => {
       let previewMapOptions = this.getPreviewMapOptions(map);
@@ -32,8 +59,8 @@ export class PreviewMapComponent implements OnInit {
 
       previewMapOptions.el = document.getElementById(this.WORKFLOW_EDITOR_PREVIEW_ID);
       map = new joint.dia.Paper(previewMapOptions);
-
       this.previewMap = map;
+      console.log('zoom value: ', this.zoomValue);
       this.previewMap.scale(0.15);
       this.previewMap.drawGrid();
       this.setPreviewMapDimensions();
