@@ -38,7 +38,7 @@ export class PreviewMapComponent implements OnInit {
     this.previewMapService.getWorkFlowEditorTranslateStream().subscribe(offset => {
       this.translateOffsetX = offset.x;
       this.translateOffsetY = offset.y;
-      if (this.previewMap !== undefined){
+      if (this.previewMap !== undefined) {
         this.previewMap.translate(this.translateOffsetX, this.translateOffsetY);
       }
     });
@@ -46,7 +46,7 @@ export class PreviewMapComponent implements OnInit {
   public initializeZoomOffset(): void {
     this.previewMapService.getWorkFlowEditorZoomStream().subscribe(zoomValue => {
       this.zoomValue = zoomValue;
-      if (this.previewMap !== undefined){
+      if (this.previewMap !== undefined) {
         this.previewMap.scale(this.zoomValue * 0.15);
       }
     });
