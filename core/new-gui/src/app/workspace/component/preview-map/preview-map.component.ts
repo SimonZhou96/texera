@@ -39,8 +39,7 @@ export class PreviewMapComponent implements OnInit {
       this.translateOffsetX = offset.x;
       this.translateOffsetY = offset.y;
       if (this.previewMap !== undefined) {
-        this.previewMap.translate(10,
-         10);
+        this.previewMap.translate(offset.x, offset.y);
       }
     });
   }
