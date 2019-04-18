@@ -206,9 +206,10 @@ export class WorkflowEditorComponent implements AfterViewInit {
             (- this.getWrapperElementOffset().y + this.dragOffset.y)
           );
 
+          console.log(this.getWrapperElementOffset());
           // pass offset to the preview map service.
-          this.previewMapService.sendTranslateOffset(- this.getWrapperElementOffset().x + this.dragOffset.x,
-          (- this.getWrapperElementOffset().y + this.dragOffset.y));
+          this.previewMapService.sendTranslateOffset(this.dragOffset.x,
+          this.dragOffset.y);
           // pass offset to the drag-and-drop.service, make drop operator be at the right location.
           this.dragDropService.setOffset(this.dragOffset);
         });

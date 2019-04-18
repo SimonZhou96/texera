@@ -30,8 +30,8 @@ export class PreviewMapComponent implements OnInit {
     this.initializePreviewMap();
   }
   ngAfterInit() {
-    this.initializeZoomOffset();
-    this.intializeTranslateOffset();
+    // this.initializeZoomOffset();
+    // this.intializeTranslateOffset();
     this.initializePreviewMap();
   }
   public intializeTranslateOffset(): void {
@@ -39,7 +39,8 @@ export class PreviewMapComponent implements OnInit {
       this.translateOffsetX = offset.x;
       this.translateOffsetY = offset.y;
       if (this.previewMap !== undefined) {
-        this.previewMap.translate(this.translateOffsetX, this.translateOffsetY);
+        this.previewMap.translate(10,
+         10);
       }
     });
   }
