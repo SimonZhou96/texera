@@ -32,7 +32,7 @@
   */
   $header-height: 56px;
   $resultbar-height: 25px;
-  $previewmap-height: 75px;
+  $previewmap-height: 100px;
 .texera-workspace-grid-container {
   display: grid;
   grid-template-columns: 14% 70% 16%;
@@ -56,7 +56,7 @@
   grid-template-rows: 
   $header-height calc((100% - #{$header-height} - #{$resultbar-height} - #{$previewmap-height})) 
   $resultbar-height 0px
-  $previewmap-height 75px
+  $previewmap-height 100px
 }
 
 /**

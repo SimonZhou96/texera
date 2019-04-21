@@ -4,6 +4,9 @@ import { TourService } from 'ngx-tour-ng-bootstrap';
 import { environment } from '../../../../environments/environment';
 import { DragDropService } from './../../service/drag-drop/drag-drop.service';
 import { ZoomInOutService } from './../../service/zoom-in-out/zoom-in-out.service';
+import { WorkflowActionService } from './../../service/workflow-graph/model/workflow-action.service';
+import { Observable, Subject } from 'rxjs';
+import {NgbModal, NgbActiveModal} from '@ng-bootstrap/ng-bootstrap';
 
 /**
  * NavigationComponent is the top level navigation bar that shows
@@ -38,7 +41,8 @@ export class NavigationComponent implements OnInit {
    private newZoomRatio: number = 1;
   constructor(private dragDropService: DragDropService,
     private executeWorkflowService: ExecuteWorkflowService, public tourService: TourService,
-    private zoomInOutService: ZoomInOutService) {
+    private zoomInOutService: ZoomInOutService, private modalService: NgbModal,
+    private workflowActionService: WorkflowActionService) {
     // return the run button after the execution is finished, either
     //  when the value is valid or invalid
     executeWorkflowService.getExecuteEndedStream().subscribe(
@@ -67,7 +71,6 @@ export class NavigationComponent implements OnInit {
   public mouseLeave() {
 
   }
-  
   public onClickDelete(): void {
 
   }
@@ -140,6 +143,27 @@ export class NavigationComponent implements OnInit {
     this.newZoomRatio = ratio;
   }
   /**
+   * This method will handle the load template action, there will be 2 scenario
+   *  1. If there is nothing in the UI, load the template
+   *  2. If there are other operators on the paper, prompt the user to confirm this action, then
+   *      load the template if the user confirmed.
+   */
+  public loadTemplate() {
+    if ( this.workflowActionService.getTexeraGraph().getAllOperators().length === 0) {
+      this.onClickUtility();
+    } else {
+      const modelRef = this.modalService.open(NagivationNgbModalComponent);
+      Observable.from(modelRef.result)
+        .filter(userDecision => userDecision === true)
+        .subscribe(() => {
+          this.workflowActionService.deleteAllOperators();
+          this.onClickUtility();
+        },
+        error => {}
+      );
+    }
+  }
+  /**
    * send the offset value to the work flow editor panel using drag and drop service.
    * when users click on the button, we change the zoomoffset to make window larger or smaller.
   */
@@ -164,5 +188,31 @@ export class NavigationComponent implements OnInit {
     this.newZoomRatio -= NavigationComponent.ZOOM_DIFFERENCE;
     this.zoomInOutService.setZoomRatio(this.zoomInOutService.getZoomRatio() - NavigationComponent.ZOOM_DIFFERENCE);
     this.zoomInOutService.setmouseWheelZoomProperty(this.zoomInOutService.getZoomRatio());
+  }
+}
+/**
+ *
+ * NgbModalComponent is the pop-up window that will be
+ *  displayed when the user clicks on a specific row
+ *  to show the displays of that row.
+ *
+ * User can exit the pop-up window by
+ *  1. Clicking the dismiss button on the top-right hand corner
+ *      of the Modal
+ *  2. Clicking the `Close` button at the bottom-right
+ *  3. Clicking any shaded area that is not the pop-up window
+ *  4. Pressing `Esc` button on the keyboard
+ */
+@Component({
+  selector: 'texera-navigation-ngbmodal',
+  templateUrl: './navigation-modal.component.html',
+  styleUrls: ['./navigation.component.scss']
+})
+export class NagivationNgbModalComponent {
+
+  constructor(public activeModal: NgbActiveModal) {}
+
+  public confirmDelete() {
+    this.activeModal.close(true);
   }
 }

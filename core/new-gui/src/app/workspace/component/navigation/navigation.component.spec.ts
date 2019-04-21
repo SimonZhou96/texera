@@ -2,6 +2,8 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 
+import { NgbModal, NgbModule } from '@ng-bootstrap/ng-bootstrap';
+
 import { NavigationComponent } from './navigation.component';
 import { ExecuteWorkflowService } from './../../service/execute-workflow/execute-workflow.service';
 import { WorkflowActionService } from './../../service/workflow-graph/model/workflow-action.service';
@@ -12,16 +14,17 @@ import { CustomNgMaterialModule } from '../../../common/custom-ng-material.modul
 import { StubOperatorMetadataService } from '../../service/operator-metadata/stub-operator-metadata.service';
 import { OperatorMetadataService } from '../../service/operator-metadata/operator-metadata.service';
 import { JointUIService } from '../../service/joint-ui/joint-ui.service';
-import { DragDropService } from '../../service/drag-drop/drag-drop.service';
-import { WorkflowUtilService } from '../../service/workflow-graph/util/workflow-util.service';
-
 
 import { Observable } from 'rxjs/Observable';
 import { marbles } from 'rxjs-marbles';
 import { HttpClient } from '@angular/common/http';
 import { mockExecutionResult } from '../../service/execute-workflow/mock-result-data';
+import { DragDropService } from '../../service/drag-drop/drag-drop.service';
+import { WorkflowUtilService } from '../../service/workflow-graph/util/workflow-util.service';
 import { environment } from '../../../../environments/environment';
+import { LoadUtilitiesTemplatesService } from '../../service/load-utilities-templates/load-utilities-templates.service';
 
+import { ZoomInOutService } from './../../service/zoom-in-out/zoom-in-out.service';
 class StubHttpClient {
 
   public post<T>(): Observable<string> { return Observable.of('a'); }
@@ -33,15 +36,23 @@ describe('NavigationComponent', () => {
   let fixture: ComponentFixture<NavigationComponent>;
   let executeWorkFlowService: ExecuteWorkflowService;
   let dragDropService: DragDropService;
+  let workflowActionService: WorkflowActionService;
+  let loadUtilitiesTemplatesService: LoadUtilitiesTemplatesService;
+  let modalService:  NgbModal;
+  let zoomInOutService: ZoomInOutService;
   beforeEach(async(() => {
     TestBed.configureTestingModule({
       declarations: [NavigationComponent],
       imports: [
         CustomNgMaterialModule,
         RouterTestingModule.withRoutes([]),
+        NgbModule.forRoot()
       ],
       providers: [
         WorkflowActionService,
+        ZoomInOutService,
+        LoadUtilitiesTemplatesService,
+        WorkflowUtilService,
         JointUIService,
         ExecuteWorkflowService,
         DragDropService,
@@ -55,9 +66,15 @@ describe('NavigationComponent', () => {
   beforeEach(() => {
     fixture = TestBed.createComponent(NavigationComponent);
     component = fixture.componentInstance;
+
     executeWorkFlowService = TestBed.get(ExecuteWorkflowService);
     dragDropService = TestBed.get(DragDropService);
+    workflowActionService = TestBed.get(WorkflowActionService);
+    loadUtilitiesTemplatesService = TestBed.get(LoadUtilitiesTemplatesService);
+    modalService = TestBed.get(NgbModal);
+    zoomInOutService = TestBed.get(ZoomInOutService);
     fixture.detectChanges();
+
     environment.pauseResumeEnabled = true;
   });
 
@@ -156,7 +173,8 @@ describe('NavigationComponent', () => {
       m.hot(endMarbleString, endMarblevalues)
     );
 
-    const mockComponent = new NavigationComponent(dragDropService, executeWorkFlowService, TestBed.get(TourService));
+    const mockComponent = new NavigationComponent(dragDropService, executeWorkFlowService, TestBed.get(TourService),
+    zoomInOutService, modalService, workflowActionService);
 
     executeWorkFlowService.getExecutionPauseResumeStream()
       .subscribe({
@@ -164,6 +182,51 @@ describe('NavigationComponent', () => {
           expect(mockComponent.isWorkflowPaused).toBeTruthy();
         }
       });
+  }));
+
+  it('should change zoom to be smaller when user click on the zoom out buttons', marbles((m) => {
+     // expect initially the zoom ratio is 1;
+   const originalZoomRatio = 1;
+
+   m.hot('-e-').do(() => component.onClickZoomOut()).subscribe();
+   dragDropService.getWorkflowEditorZoomStream().subscribe(
+     newRatio => {
+       fixture.detectChanges();
+       expect(newRatio).toBeLessThan(originalZoomRatio);
+       expect(newRatio).toEqual(originalZoomRatio - NavigationComponent.ZOOM_DIFFERENCE);
+     }
+   );
+
+  }));
+
+  it('should change zoom to be bigger when user click on the zoom in buttons', marbles((m) => {
+    // expect initially the zoom ratio is 1;
+   const originalZoomRatio = 1;
+
+   m.hot('-e-').do(() => component.onClickZoomIn()).subscribe();
+   dragDropService.getWorkflowEditorZoomStream().subscribe(
+     newRatio => {
+       fixture.detectChanges();
+       expect(newRatio).toBeGreaterThan(originalZoomRatio);
+       expect(newRatio).toEqual(originalZoomRatio + NavigationComponent.ZOOM_DIFFERENCE);
+     }
+   );
+
+
+  }));
+
+  it('should execute the zoom in function when we click on the Zoom In button', marbles((m) => {
+    m.hot('-e-').do(event => component.onClickZoomIn()).subscribe();
+    const zoomEndStream = dragDropService.getWorkflowEditorZoomStream().map(value => 'e');
+    const expectedStream = '-e-';
+    m.expect(zoomEndStream).toBeObservable(expectedStream);
+  }));
+
+  it('should execute the zoom out function when we click on the Zoom Out button', marbles((m) => {
+    m.hot('-e-').do(event => component.onClickZoomOut()).subscribe();
+    const zoomEndStream = dragDropService.getWorkflowEditorZoomStream().map(value => 'e');
+    const expectedStream = '-e-';
+    m.expect(zoomEndStream).toBeObservable(expectedStream);
   }));
 
   it('it should update isWorkflowPaused variable to false when 1 is returned from getExecutionPauseResumeStream', marbles((m) => {
@@ -176,7 +239,8 @@ describe('NavigationComponent', () => {
       m.hot(endMarbleString, endMarblevalues)
     );
 
-    const mockComponent = new NavigationComponent(dragDropService, executeWorkFlowService, TestBed.get(TourService));
+    const mockComponent = new NavigationComponent(dragDropService, executeWorkFlowService, TestBed.get(TourService),
+    zoomInOutService, modalService, workflowActionService);
 
     executeWorkFlowService.getExecutionPauseResumeStream()
       .subscribe({
@@ -185,68 +249,9 @@ describe('NavigationComponent', () => {
         }
       });
   }));
-  it('should change zoom to be smaller when user click on the zoom out buttons', marbles((m) => {
-    // expect initially the zoom ratio is 1;
-  const originalZoomRatio = 1;
 
-  m.hot('-e-').do(() => component.onClickZoomOut()).subscribe();
-  dragDropService.getWorkflowEditorZoomStream().subscribe(
-    newRatio => {
-      fixture.detectChanges();
-      expect(newRatio).toBeLessThan(originalZoomRatio);
-      expect(newRatio).toEqual(originalZoomRatio - NavigationComponent.ZOOM_DIFFERENCE);
-    }
-  );
+  // it('should trigger load utility templates when the number of the operators on the graph is 0', marbles((m) => {
+  //   const utilityIndex = 0;
+  // }));
 
- }));
-
- it('should change zoom to be bigger when user click on the zoom in buttons', marbles((m) => {
-   // expect initially the zoom ratio is 1;
-  const originalZoomRatio = 1;
-
-  m.hot('-e-').do(() => component.onClickZoomIn()).subscribe();
-  dragDropService.getWorkflowEditorZoomStream().subscribe(
-    newRatio => {
-      fixture.detectChanges();
-      expect(newRatio).toBeGreaterThan(originalZoomRatio);
-      expect(newRatio).toEqual(originalZoomRatio + NavigationComponent.ZOOM_DIFFERENCE);
-    }
-  );
-
-
- }));
-
- it('should execute the zoom in function when we click on the Zoom In button', marbles((m) => {
-   m.hot('-e-').do(event => component.onClickZoomIn()).subscribe();
-   const zoomEndStream = dragDropService.getWorkflowEditorZoomStream().map(value => 'e');
-   const expectedStream = '-e-';
-   m.expect(zoomEndStream).toBeObservable(expectedStream);
- }));
-
- it('should execute the zoom out function when we click on the Zoom Out button', marbles((m) => {
-   m.hot('-e-').do(event => component.onClickZoomOut()).subscribe();
-   const zoomEndStream = dragDropService.getWorkflowEditorZoomStream().map(value => 'e');
-   const expectedStream = '-e-';
-   m.expect(zoomEndStream).toBeObservable(expectedStream);
- }));
-
- it('it should update isWorkflowPaused variable to false when 1 is returned from getExecutionPauseResumeStream', marbles((m) => {
-   const endMarbleString = '-e-|';
-   const endMarblevalues = {
-     e: 1
-   };
-
-   spyOn(executeWorkFlowService, 'getExecutionPauseResumeStream').and.returnValue(
-     m.hot(endMarbleString, endMarblevalues)
-   );
-
-   const mockComponent = new NavigationComponent(dragDropService, executeWorkFlowService, TestBed.get(TourService));
-
-   executeWorkFlowService.getExecutionPauseResumeStream()
-     .subscribe({
-       complete: () => {
-         expect(mockComponent.isWorkflowPaused).toBeFalsy();
-       }
-     });
- }));
 });

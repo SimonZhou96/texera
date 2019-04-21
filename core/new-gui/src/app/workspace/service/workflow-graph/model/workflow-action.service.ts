@@ -113,6 +113,15 @@ export class WorkflowActionService {
   }
 
   /**
+   * Deletes all operators from the workflow graph
+   */
+  public deleteAllOperators(): void {
+    this.texeraGraph.getAllOperators().forEach(
+      operator => this.deleteOperator(operator.operatorID)
+    );
+  }
+  
+  /**
    * Adds a link to the workflow graph
    * Throws an Error if the link ID or the link with same source and target already exists.
    * @param link
