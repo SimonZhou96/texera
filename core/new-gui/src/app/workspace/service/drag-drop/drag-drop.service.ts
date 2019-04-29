@@ -213,18 +213,19 @@ export class DragDropService {
    *
    */
 
-  public createNewOperator(utilityIndex: number) {
+  public createNewOperator(utilityIndex: number, offsetX: number, offsetY: number) {
+    console.log('offset: ', offsetX, offsetY);
     const firstOperatorOffset: Point = {
-      x:  this.utilityTemplateOffset,
-      y:  200
+      x:  offsetX * 2,
+      y:  offsetY * 3
     };
     const secondOperatorOffset: Point = {
-      x:  this.utilityTemplateOffset * 2,
-      y:  200
+      x:  offsetX * 3,
+      y:  offsetY * 3
     };
     const thirdOperatorOffset: Point = {
-      x:  this.utilityTemplateOffset * 3,
-      y:  200
+      x:  offsetX * 4,
+      y:  offsetY * 3
     };
     if (utilityIndex === 0) {
         this.workflowActionService.addOperator(keyWordSearchPredicate, firstOperatorOffset);

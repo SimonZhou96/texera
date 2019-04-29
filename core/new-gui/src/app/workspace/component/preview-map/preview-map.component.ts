@@ -60,7 +60,6 @@ export class PreviewMapComponent implements OnInit {
       previewMapOptions.el = document.getElementById(this.WORKFLOW_EDITOR_PREVIEW_ID);
       map = new joint.dia.Paper(previewMapOptions);
       this.previewMap = map;
-      console.log('zoom value: ', this.zoomValue);
       this.previewMap.scale(0.15);
       this.previewMap.drawGrid();
       this.setPreviewMapDimensions();
@@ -93,19 +92,14 @@ export class PreviewMapComponent implements OnInit {
    * Gets the document offset coordinates of the wrapper element's top-left corner.
    */
 
-  private getWrapperElementOffset(): { x: number, y: number } {
-    const offset = $('#' + this.WORKFLOW_EDITOR_PREVIEW_WRAPPER_ID).offset();
-    if (offset === undefined) {
-      throw new Error('fail to get Workflow Editor wrapper element offset');
-    }
-    return { x: offset.left, y: offset.top };
-  }
 
   private getPreviewMapOptions(map: joint.dia.Paper): joint.dia.Paper.Options {
     const previewMapOptions: joint.dia.Paper.Options = {
         interactive: false,
-        gridSize: 10,
-        drawGrid: true
+        // draw dots in the background of the paper
+        drawGrid: {name: 'fixedDot', args: {color: 'black', scaleFactor: 8, thickness: 1.2 } },
+        // set grid size
+        gridSize: 20,
     };
 
     return previewMapOptions;
@@ -116,8 +110,4 @@ export class PreviewMapComponent implements OnInit {
     this.getPreviewMap().setDimensions(elementSize.width, elementSize.height);
   }
 
-  private setPreviewMapOffset(): void {
-    const elementOffset = this.getWrapperElementOffset();
-    this.getPreviewMap().translate(-elementOffset.x, -elementOffset.y);
-  }
 }

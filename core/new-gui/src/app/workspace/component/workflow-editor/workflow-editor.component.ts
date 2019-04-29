@@ -84,6 +84,33 @@ export class WorkflowEditorComponent implements AfterViewInit {
     return this.newZoomRatio;
   }
 
+  /**
+   * Gets the width and height of the parent wrapper element
+   */
+  public getWrapperElementSize(): { width: number, height: number } {
+    const width = $('#' + this.WORKFLOW_EDITOR_JOINTJS_WRAPPER_ID).width();
+    const height = $('#' + this.WORKFLOW_EDITOR_JOINTJS_WRAPPER_ID).height();
+
+    if (width === undefined || height === undefined) {
+      throw new Error('fail to get Workflow Editor wrapper element size');
+    }
+
+    return { width, height };
+  }
+
+
+  /**
+   * Gets the document offset coordinates of the wrapper element's top-left corner.
+   */
+
+  public getWrapperElementOffset(): { x: number, y: number } {
+    const offset = $('#' + this.WORKFLOW_EDITOR_JOINTJS_WRAPPER_ID).offset();
+    if (offset === undefined) {
+      throw new Error('fail to get Workflow Editor wrapper element offset');
+    }
+    return { x: offset.left, y: offset.top };
+  }
+
   ngAfterViewInit() {
     this.initializeJointPaper();
     this.handlePaperZoom();
@@ -126,7 +153,8 @@ export class WorkflowEditorComponent implements AfterViewInit {
 
     private handlePaperUtility(): void {
       this.dragDropService.getWorkFlowEditorUtilityStream().subscribe((newUtilityIndex) => {
-        this.dragDropService.createNewOperator(newUtilityIndex);
+        this.dragDropService.createNewOperator(newUtilityIndex, this.getWrapperElementOffset().x, 
+        this.getWrapperElementOffset().y);
       });
     }
 
@@ -330,32 +358,7 @@ export class WorkflowEditorComponent implements AfterViewInit {
       );
   }
 
-  /**
-   * Gets the width and height of the parent wrapper element
-   */
-  private getWrapperElementSize(): { width: number, height: number } {
-    const width = $('#' + this.WORKFLOW_EDITOR_JOINTJS_WRAPPER_ID).width();
-    const height = $('#' + this.WORKFLOW_EDITOR_JOINTJS_WRAPPER_ID).height();
-
-    if (width === undefined || height === undefined) {
-      throw new Error('fail to get Workflow Editor wrapper element size');
-    }
-
-    return { width, height };
-  }
-
-
-  /**
-   * Gets the document offset coordinates of the wrapper element's top-left corner.
-   */
-
-  private getWrapperElementOffset(): { x: number, y: number } {
-    const offset = $('#' + this.WORKFLOW_EDITOR_JOINTJS_WRAPPER_ID).offset();
-    if (offset === undefined) {
-      throw new Error('fail to get Workflow Editor wrapper element offset');
-    }
-    return { x: offset.left, y: offset.top };
-  }
+  
 
 
 
@@ -367,9 +370,6 @@ export class WorkflowEditorComponent implements AfterViewInit {
   private static getJointPaperOptions(): joint.dia.Paper.Options {
 
     const jointPaperOptions: joint.dia.Paper.Options = {
-
-      // set grid size to 1px (smallest grid)
-      gridSize: 1,
       // enable jointjs feature that automatically snaps a link to the closest port with a radius of 30px
       snapLinks: { radius: 30 },
       // disable jointjs default action that can make a link not connect to an operator
@@ -386,8 +386,10 @@ export class WorkflowEditorComponent implements AfterViewInit {
       preventDefaultBlankAction: false,
       // disable jointjs default action that prevents normal right click menu showing up on jointjs paper
       preventContextMenu: false,
-      // draw grid to the paper
-      drawGrid: true
+      // draw dots in the background of the paper
+      drawGrid: {name: 'fixedDot', args: {color: 'black', scaleFactor: 8, thickness: 1.2 } },
+      // set grid size
+      gridSize: 2,
     };
 
     return jointPaperOptions;
