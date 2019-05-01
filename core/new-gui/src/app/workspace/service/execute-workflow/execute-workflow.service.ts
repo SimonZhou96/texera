@@ -74,6 +74,7 @@ export class ExecuteWorkflowService {
         workflowID: this.workflowExecutionID
       };
     }
+    console.log('body', body);
     const requestURL = `${AppSettings.getApiEndpoint()}/${EXECUTE_WORKFLOW_ENDPOINT}`;
 
     this.executeStartedStream.next('execution started');
@@ -87,8 +88,7 @@ export class ExecuteWorkflowService {
         // backend will either respond an execution result or an error will occur
         // handle both cases
         response => {
-          console.log('response: ', response);
-          this.handleExecuteResult(response);
+         this.handleExecuteResult(response);
           this.workflowExecutionID = undefined;
         },
         errorResponse => {
